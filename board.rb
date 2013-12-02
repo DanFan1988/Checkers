@@ -5,9 +5,11 @@ class Board
 
 	attr_accessor :grid
 
-	def initialize
+	def initialize(setup = true)
 		@grid = Array.new(8) { Array.new(8)}
-		set_up_board
+		if setup == true
+			set_up_board
+		end
 	end
 
 	def [](pos)
@@ -54,4 +56,17 @@ class Board
 			puts
 		end
 	end
+
+	def dup
+	duped_board = Board.new(false)
+
+  pieces.each do |piece|
+    duped_board[piece.position] = piece.class.new(duped_board, piece.color, piece.position.dup, piece.promoted)
+  end
+  duped_board
+  end
+
+  def pieces
+  	@grid.flatten.compact
+  end
 end

@@ -1,5 +1,6 @@
 require_relative 'board'
 require_relative 'piece'
+require_relative 'exceptions'
 
 class Game
 
@@ -15,12 +16,13 @@ class Game
 		until gameover?(@player1) || gameover?(@player2)
 			puts "#{current_player.color.capitalize}'s Turn \n\n"
 
-		#begin
+		begin
 			@board.display_board
-
-			@board[current_player.get_starter].perform_moves!(current_player.get_moves)
-			#check validity
-		#rescue 
+			@board[current_player.get_starter].perform_moves(current_player.get_moves)
+		rescue InvalidMoveError => error
+			puts error.message
+			retry
+		end
 
 		current_player = current_player == @player1 ? @player2 : @player1
 		end
@@ -46,8 +48,15 @@ class Player
 	end
 
 	def get_moves
-		print "Where would you like to move?"
-			gets.chomp.split(',').map { |i| i.to_i }
+		moves = []
+		move = ""
+		while true
+		print "Where would you like to move? Please input 1 move at a time. Type '0' when finished. "
+			p move = gets.chomp.split(',').map { |i| i.to_i }
+			break if move == [0]
+			moves << move
+		end
+		p moves
 	end
 
 end
