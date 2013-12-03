@@ -13,23 +13,32 @@ class Game
 
 	def play
 		current_player = @player1
-		until gameover?(@player1) || gameover?(@player2)
-			puts "#{current_player.color.capitalize}'s Turn \n\n"
+		until gameover?
+			
+			begin
+				puts "#{current_player.color.capitalize}'s Turn \n\n"
+				@board.display_board
+				starting_pos = current_player.get_starter
+				ending_pos = current_player.get_moves
+				raise InvalidMoveError.new("You didn't pick a piece") if @board[starting_pos].nil?
+				if @board[starting_pos].color != current_player.color
+					raise InvalidMoveError.new("That piece is not your color")
+				end
+				@board[starting_pos].perform_moves(ending_pos)
+			rescue InvalidMoveError => error
+				puts error.message
+				retry
+			end
 
-		begin
-			@board.display_board
-			@board[current_player.get_starter].perform_moves(current_player.get_moves)
-		rescue InvalidMoveError => error
-			puts error.message
-			retry
-		end
-
-		current_player = current_player == @player1 ? @player2 : @player1
+			current_player = current_player == @player1 ? @player2 : @player1
 		end
 		@board.display_board
 	end
 
-	def gameover?(player)
+	def gameover?
+		all_red = @board.pieces.none? { |piece| piece.color == :red }
+		all_white = @board.pieces.none? { |piece| piece.color == :white }
+		all_red || all_white
 	end
 
 
@@ -44,7 +53,10 @@ class Player
 
 	def get_starter
 		print "Which piece would you like to move?"
-			gets.chomp.split(',').map { |i| i.to_i }
+		move = gets.chomp.split(',').map { |i| i.to_i }
+		raise InvalidMoveError.new("Out Of Bounds. Try again") if out_of_bounds?(move)
+		#	raise InvalidMoveError.new("NOt yor piece") if your_piece?(move)
+		move
 	end
 
 	def get_moves
@@ -52,13 +64,17 @@ class Player
 		move = ""
 		while true
 		print "Where would you like to move? Please input 1 move at a time. Type '0' when finished. "
-			p move = gets.chomp.split(',').map { |i| i.to_i }
+			move = gets.chomp.split(',').map { |i| i.to_i }
 			break if move == [0]
+			raise InvalidMoveError.new("Out of bounds. Try again.") if out_of_bounds?(move)
 			moves << move
 		end
-		p moves
+		moves
 	end
 
+	def out_of_bounds?(move)
+		move.max > 7 || move.min < 0
+	end
 end
 
 if $PROGRAM_NAME == __FILE__

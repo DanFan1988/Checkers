@@ -1,6 +1,5 @@
 require_relative 'board'
 require_relative 'exceptions'
-require 'debugger'
 
 class Piece
 
@@ -35,7 +34,7 @@ class Piece
 	end
 
 	def perform_slide(pos)
-		if slide_moves.include?([@position[0]-pos[0],@position[1]-pos[1]])
+		if slide_moves.include?([@position[0] - pos[0],@position[1]-pos[1]])
 			 @board[pos] = @board[@position]
 			 @board[@position] = nil
 			 @position = pos
@@ -99,17 +98,21 @@ class Piece
 	end
 
 	def perform_moves!(move_sequence)
-
+		p move_sequence
 		if move_sequence.count == 1
 			mover = (perform_slide(move_sequence.flatten) || perform_jump(move_sequence.flatten))
 			raise InvalidMoveError.new("Invalid Jump") if mover == false
 		end
 
-		if move_sequence.length > 2
+		if move_sequence.count >= 2
+			p move_sequence
 			move_sequence.each do |move|
+				p move_sequence
 				raise InvalidMoveError.new("Invalid Jump") if perform_jump(move) == false
+				perform_jump(move)
 			end
 		end
+		@board.pieces.each { |piece| piece.king? }
 	end
 
 	def valid_move_seq?(piece, move_sequence)
@@ -117,7 +120,16 @@ class Piece
 		duped_board[piece].perform_moves!(move_sequence)
 	end
 
+	def king?
+		if self.position[0] == 0 && self.color == :white
+			@promoted = true
+		elsif self.position[0] == 7 && self.color == :red
+			@promoted = true
+		end
+	end
+
 	def to_s
+		return "X".colorize(:color => @color) if self.promoted == true
 		return "O".colorize(:color => @color)
 	end
 end
